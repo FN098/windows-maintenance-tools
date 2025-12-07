@@ -1,9 +1,9 @@
 # ===============================
 # Docker WSL Reset Script
-# è‡ªå‹•ç®¡ç†è€…æ˜‡æ ¼ï¼‹Dockeråœæ­¢ï¼‹WSLå†æ§‹ç¯‰
+# ©“®ŠÇ—Ò¸Ši{Docker’â~{WSLÄ\’z
 # ===============================
 
-# --- ç®¡ç†è€…æ¨©é™ãƒã‚§ãƒƒã‚¯ ---
+# --- ŠÇ—ÒŒ ŒÀƒ`ƒFƒbƒN ---
 $IsAdmin = ([Security.Principal.WindowsPrincipal] `
     [Security.Principal.WindowsIdentity]::GetCurrent()
 ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
@@ -13,51 +13,51 @@ if (-not $IsAdmin) {
     exit
 }
 
-Write-Host "[*] ç®¡ç†è€…æ¨©é™ã§å®Ÿè¡Œä¸­" -ForegroundColor Green
+Write-Host "[*] ŠÇ—ÒŒ ŒÀ‚ÅÀs’†" -ForegroundColor Green
 
-# --- Docker Desktop ã®å¼·åˆ¶çµ‚äº† ---
-Write-Host "[*] Docker Desktop ã‚’åœæ­¢ä¸­..."
+# --- Docker Desktop ‚Ì‹­§I—¹ ---
+Write-Host "[*] Docker Desktop ‚ğ’â~’†..."
 Get-Process "Docker Desktop" -ErrorAction SilentlyContinue | Stop-Process -Force
 Get-Process "com.docker.backend" -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Seconds 2
 
-# --- WSL åœæ­¢ ---
-Write-Host "[*] WSL ã‚’åœæ­¢ã—ã¾ã™..."
+# --- WSL ’â~ ---
+Write-Host "[*] WSL ‚ğ’â~‚µ‚Ü‚·..."
 wsl --shutdown
 Start-Sleep -Seconds 1
 
-# --- ãƒ‘ã‚¹ ---
+# --- ƒpƒX ---
 $distroPath   = "$env:LOCALAPPDATA\Docker\wsl\distro"
 $dataPath     = "$env:LOCALAPPDATA\Docker\wsl\data"
 
-# --- å¯¾è±¡ãƒ‡ã‚£ã‚¹ãƒˆãƒ­ ---
+# --- ‘ÎÛƒfƒBƒXƒgƒ ---
 $distros = @("docker-desktop", "docker-desktop-data")
 
 foreach ($d in $distros) {
     $exists = wsl -l -q | Select-String "^$d$"
 
     if ($exists) {
-        Write-Host "[*] $d ã‚’ã‚¨ã‚¯ã‚¹ãƒãƒ¼ãƒˆä¸­..."
+        Write-Host "[*] $d ‚ğƒGƒNƒXƒ|[ƒg’†..."
         wsl --export $d "$d.tar"
 
-        Write-Host "[*] $d ã‚’ç™»éŒ²è§£é™¤ä¸­..."
+        Write-Host "[*] $d ‚ğ“o˜^‰ğœ’†..."
         wsl --unregister $d
     }
     else {
-        Write-Host "[!] $d ã¯å­˜åœ¨ã—ãªã„ãŸã‚ã‚¹ã‚­ãƒƒãƒ—" -ForegroundColor Yellow
+        Write-Host "[!] $d ‚Í‘¶İ‚µ‚È‚¢‚½‚ßƒXƒLƒbƒv" -ForegroundColor Yellow
     }
 }
 
-# --- å†ã‚¤ãƒ³ãƒãƒ¼ãƒˆ ---
+# --- ÄƒCƒ“ƒ|[ƒg ---
 if (Test-Path "docker-desktop.tar") {
-    Write-Host "[*] docker-desktop ã‚’å†ã‚¤ãƒ³ãƒãƒ¼ãƒˆä¸­..."
+    Write-Host "[*] docker-desktop ‚ğÄƒCƒ“ƒ|[ƒg’†..."
     wsl --import docker-desktop "$distroPath" "docker-desktop.tar"
 }
 
 if (Test-Path "docker-desktop-data.tar") {
-    Write-Host "[*] docker-desktop-data ã‚’å†ã‚¤ãƒ³ãƒãƒ¼ãƒˆä¸­..."
+    Write-Host "[*] docker-desktop-data ‚ğÄƒCƒ“ƒ|[ƒg’†..."
     wsl --import docker-desktop-data "$dataPath" "docker-desktop-data.tar"
 }
 
-Write-Host "[*] å®Œäº†ã—ã¾ã—ãŸï¼" -ForegroundColor Green
+Write-Host "[*] Š®—¹‚µ‚Ü‚µ‚½I" -ForegroundColor Green
 pause
