@@ -1,6 +1,7 @@
 # ===============================
-# Docker WSL Reset Script
-# 自動管理者昇格＋Docker停止＋WSL再構築
+# Docker WSL Optimizer
+#
+# %LOCALAPPDATA%\Docker\wsl\disk\docker_data.vhdx を圧縮する
 # ===============================
 
 # --- 管理者権限チェック ---
@@ -15,7 +16,7 @@ if (-not $IsAdmin) {
 
 Write-Host "[*] 管理者権限で実行中" -ForegroundColor Green
 
-# --- Docker Desktop の強制終了 ---
+# --- Docker Desktop 停止 ---
 Write-Host "[*] Docker Desktop を停止中..."
 Get-Process "Docker Desktop" -ErrorAction SilentlyContinue | Stop-Process -Force
 Get-Process "com.docker.backend" -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -30,33 +31,38 @@ Start-Sleep -Seconds 1
 $distroPath   = "$env:LOCALAPPDATA\Docker\wsl\distro"
 $dataPath     = "$env:LOCALAPPDATA\Docker\wsl\data"
 
-# --- 対象ディストロ ---
-$distros = @("docker-desktop", "docker-desktop-data")
+# --- distro リスト取得（UTF-16 対策済） ---
+$installedDistros = (wsl -l -q).Trim()
 
-foreach ($d in $distros) {
-    $exists = wsl -l -q | Select-String "^$d$"
+# --- 対象 ---
+$targets = @(
+    @{ Name="docker-desktop";      Path=$distroPath;     Tar="docker-desktop.tar" },
+    @{ Name="docker-desktop-data"; Path=$dataPath;       Tar="docker-desktop-data.tar" }
+)
 
-    if ($exists) {
-        Write-Host "[*] $d をエクスポート中..."
-        wsl --export $d "$d.tar"
+foreach ($t in $targets) {
+    $name = $t.Name
+    $tar  = $t.Tar
+    $path = $t.Path
 
-        Write-Host "[*] $d を登録解除中..."
-        wsl --unregister $d
+    if ($installedDistros -contains $name) {
+        Write-Host "[*] $name をエクスポート中..."
+        wsl --export $name $tar
+
+        Write-Host "[*] $name を登録解除中..."
+        wsl --unregister $name
     }
     else {
-        Write-Host "[!] $d は存在しないためスキップ" -ForegroundColor Yellow
+        Write-Host "[!] $name は存在しないためスキップ" -ForegroundColor Yellow
     }
 }
 
 # --- 再インポート ---
-if (Test-Path "docker-desktop.tar") {
-    Write-Host "[*] docker-desktop を再インポート中..."
-    wsl --import docker-desktop "$distroPath" "docker-desktop.tar"
-}
-
-if (Test-Path "docker-desktop-data.tar") {
-    Write-Host "[*] docker-desktop-data を再インポート中..."
-    wsl --import docker-desktop-data "$dataPath" "docker-desktop-data.tar"
+foreach ($t in $targets) {
+    if (Test-Path $t.Tar) {
+        Write-Host "[*] $($t.Name) を再インポート中..."
+        wsl --import $t.Name $t.Path $t.Tar
+    }
 }
 
 Write-Host "[*] 完了しました！" -ForegroundColor Green
